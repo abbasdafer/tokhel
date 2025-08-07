@@ -7,10 +7,8 @@ import { summarizeNovel } from '@/ai/flows/summarize-novel';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, getDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, getDoc, Timestamp, orderBy } from 'firebase/firestore';
 
-// In a real app, this would be a database.
-// For this demo, we're mutating an in-memory array.
 const novelsCollection = collection(db, 'novels');
 
 
@@ -29,11 +27,9 @@ export type FormState = {
   };
 };
 
-// Simulate network delay
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function getNovels(): Promise<Novel[]> {
-  const snapshot = await getDocs(novelsCollection);
+  const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
+  const snapshot = await getDocs(q);
   const novels: Novel[] = snapshot.docs.map(doc => {
       const data = doc.data();
       const releaseDate = (data.releaseDate as Timestamp).toDate();
@@ -48,7 +44,7 @@ export async function getNovels(): Promise<Novel[]> {
           isFeatured: data.isFeatured,
       };
   });
-  return novels.sort((a,b) => (b.isFeatured ? 1 : -1));
+  return novels;
 }
 
 export async function addNovel(
