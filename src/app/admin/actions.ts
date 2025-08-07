@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { novels } from '@/lib/data';
 import type { Novel } from '@/lib/types';
 import { summarizeNovel } from '@/ai/flows/summarize-novel';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 // In a real app, this would be a database.
 // For this demo, we're mutating an in-memory array.
@@ -67,7 +69,7 @@ export async function addNovel(
       description: summary,
       coverImage: 'https://placehold.co/400x600/cccccc/333333',
       pdfUrl: '#',
-      releaseDate: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }),
+      releaseDate: format(new Date(), 'dd MMMM yyyy', { locale: ar }),
       isFeatured: false,
     };
 
