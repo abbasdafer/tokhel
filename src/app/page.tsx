@@ -1,12 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { novels } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Download, ArrowLeft } from 'lucide-react';
 import { NovelCard } from '@/components/NovelCard';
 import { Separator } from '@/components/ui/separator';
+import { getNovels } from './admin/actions';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const novels = await getNovels();
   const featuredNovel = novels.find(n => n.isFeatured);
   const previousNovels = novels.filter(n => !n.isFeatured).slice(0, 3);
 

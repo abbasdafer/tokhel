@@ -2,15 +2,17 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { novels } from '@/lib/data';
 import type { Novel } from '@/lib/types';
 import { summarizeNovel } from '@/ai/flows/summarize-novel';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, getDoc, Timestamp } from 'firebase/firestore';
 
 // In a real app, this would be a database.
 // For this demo, we're mutating an in-memory array.
-let novelsData: Novel[] = [...novels];
+const novelsCollection = collection(db, 'novels');
+
 
 const NovelSchema = z.object({
   title: z.string().min(1, 'العنوان مطلوب'),
@@ -31,7 +33,22 @@ export type FormState = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function getNovels(): Promise<Novel[]> {
-  return novelsData;
+  const snapshot = await getDocs(novelsCollection);
+  const novels: Novel[] = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const releaseDate = (data.releaseDate as Timestamp).toDate();
+      return {
+          id: doc.id,
+          title: data.title,
+          description: data.description,
+          quote: data.quote,
+          coverImage: data.coverImage,
+          pdfUrl: data.pdfUrl,
+          releaseDate: format(releaseDate, 'dd MMMM yyyy', { locale: ar }),
+          isFeatured: data.isFeatured,
+      };
+  });
+  return novels.sort((a,b) => (b.isFeatured ? 1 : -1));
 }
 
 export async function addNovel(
@@ -55,25 +72,23 @@ export async function addNovel(
   const { title, quote, novelContent } = validatedFields.data;
 
   try {
-    await sleep(1000); // Simulate AI processing time
-
     // AI Summarization
-    const existingSummaries = novelsData.map(n => n.description);
+    const novels = await getNovels();
+    const existingSummaries = novels.map(n => n.description);
     const aiResult = await summarizeNovel({ novelContent, existingSummaries });
     const summary = aiResult.summary;
 
-    const newNovel: Novel = {
-      id: String(Date.now()),
+    const newNovel = {
       title,
       quote,
       description: summary,
       coverImage: 'https://placehold.co/400x600/cccccc/333333',
       pdfUrl: '#',
-      releaseDate: format(new Date(), 'dd MMMM yyyy', { locale: ar }),
+      releaseDate: Timestamp.fromDate(new Date()),
       isFeatured: false,
     };
 
-    novelsData.unshift(newNovel);
+    await addDoc(novelsCollection, newNovel);
 
     revalidatePath('/admin');
     revalidatePath('/novels');
@@ -88,8 +103,7 @@ export async function addNovel(
 
 export async function deleteNovel(id: string) {
   try {
-    await sleep(500);
-    novelsData = novelsData.filter((novel) => novel.id !== id);
+    await deleteDoc(doc(db, 'novels', id));
     revalidatePath('/admin');
     revalidatePath('/novels');
     revalidatePath('/');
@@ -103,12 +117,23 @@ export async function deleteNovel(id: string) {
 
 export async function setFeaturedNovel(id: string) {
     try {
-        await sleep(500);
-        novelsData = novelsData.map(novel => ({
-            ...novel,
-            isFeatured: novel.id === id
-        }));
+        const batch = writeBatch(db);
+
+        // Unset any other featured novel
+        const q = query(novelsCollection, where("isFeatured", "==", true));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((document) => {
+            batch.update(document.ref, { isFeatured: false });
+        });
+
+        // Set the new featured novel
+        const novelRef = doc(db, 'novels', id);
+        batch.update(novelRef, { isFeatured: true });
+        
+        await batch.commit();
+
         revalidatePath('/admin');
+        revalidatePath('/novels');
         revalidatePath('/');
         return { message: 'تم تحديد الرواية كـ "قادمة" بنجاح.' };
     } catch (e) {

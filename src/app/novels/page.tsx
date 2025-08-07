@@ -1,8 +1,11 @@
-import { novels } from '@/lib/data';
+import { getNovels } from '@/app/admin/actions';
 import { NovelCard } from '@/components/NovelCard';
 
-export default function PreviousNovelsPage() {
-  const allNovels = novels.filter(n => !n.isFeatured);
+export const dynamic = 'force-dynamic';
+
+export default async function PreviousNovelsPage() {
+  const allNovels = await getNovels();
+  const novelsToShow = allNovels.filter(n => !n.isFeatured);
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -16,7 +19,7 @@ export default function PreviousNovelsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {allNovels.map((novel, index) => (
+        {novelsToShow.map((novel, index) => (
           <div key={novel.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms`}}>
             <NovelCard novel={novel} />
           </div>
