@@ -14,7 +14,6 @@ const navLinks = [
   { href: '/novels', label: 'الروايات السابقة' },
   { href: '/about', label: 'عن الكاتب' },
   { href: '/contact', label: 'تواصل معنا' },
-  { href: '/admin', label: 'لوحة التحكم' },
 ];
 
 export function Header() {
