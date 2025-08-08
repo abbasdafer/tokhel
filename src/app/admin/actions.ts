@@ -7,7 +7,7 @@ import { summarizeNovel } from '@/ai/flows/summarize-novel';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, getDoc, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, Timestamp, orderBy } from 'firebase/firestore';
 
 const novelsCollection = collection(db, 'novels');
 
@@ -28,23 +28,30 @@ export type FormState = {
 };
 
 export async function getNovels(): Promise<Novel[]> {
-  const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
-  const snapshot = await getDocs(q);
-  const novels: Novel[] = snapshot.docs.map(doc => {
-      const data = doc.data();
-      const releaseDate = (data.releaseDate as Timestamp).toDate();
-      return {
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          quote: data.quote,
-          coverImage: data.coverImage,
-          pdfUrl: data.pdfUrl,
-          releaseDate: format(releaseDate, 'dd MMMM yyyy', { locale: ar }),
-          isFeatured: data.isFeatured,
-      };
-  });
-  return novels;
+  try {
+    const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
+    const snapshot = await getDocs(q);
+    const novels: Novel[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const releaseDate = (data.releaseDate as Timestamp).toDate();
+        return {
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            quote: data.quote,
+            coverImage: data.coverImage,
+            pdfUrl: data.pdfUrl,
+            releaseDate: format(releaseDate, 'dd MMMM yyyy', { locale: ar }),
+            isFeatured: data.isFeatured,
+        };
+    });
+    return novels;
+  } catch (error) {
+    console.error("Error fetching novels from Firestore:", error);
+    // In case of error (e.g., permissions), return an empty array
+    // to prevent the app from crashing. The error will be logged server-side.
+    return [];
+  }
 }
 
 export async function addNovel(
@@ -91,9 +98,9 @@ export async function addNovel(
     revalidatePath('/');
 
     return { message: `تمت إضافة رواية "${title}" بنجاح.` };
-  } catch (e) {
-    console.error(e);
-    return { message: 'فشلت عملية إضافة الرواية.' };
+  } catch (e: any) {
+    console.error("Error adding novel:", e.message);
+    return { message: `فشلت عملية إضافة الرواية: ${e.message}` };
   }
 }
 
@@ -104,9 +111,9 @@ export async function deleteNovel(id: string) {
     revalidatePath('/novels');
     revalidatePath('/');
     return { message: 'تم حذف الرواية بنجاح.' };
-  } catch (e) {
-    console.error(e);
-    return { message: 'فشلت عملية الحذف.' };
+  } catch (e: any) {
+    console.error("Error deleting novel:", e.message);
+    return { message: `فشلت عملية الحذف: ${e.message}` };
   }
 }
 
@@ -132,8 +139,8 @@ export async function setFeaturedNovel(id: string) {
         revalidatePath('/novels');
         revalidatePath('/');
         return { message: 'تم تحديد الرواية كـ "قادمة" بنجاح.' };
-    } catch (e) {
-        console.error(e);
-        return { message: 'فشلت عملية التحديث.' };
+    } catch (e: any) {
+        console.error("Error setting featured novel:", e.message);
+        return { message: `فشلت عملية التحديث: ${e.message}` };
     }
 }
