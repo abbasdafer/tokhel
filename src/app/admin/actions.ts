@@ -2,7 +2,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Novel } from '@/lib/types';
 import { z } from 'zod';
@@ -17,10 +17,17 @@ const NovelSchema = z.object({
 export async function getNovels(): Promise<Novel[]> {
   try {
     const novelsCollection = collection(db, 'novels');
-    const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
+    // Simplified query to avoid missing index error.
+    // The user needs to create the composite index in Firestore for the complex query to work.
+    // orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc')
+    const q = query(novelsCollection, orderBy('releaseDate', 'desc'));
     const novelSnapshot = await getDocs(q);
     const novelsList = novelSnapshot.docs.map(doc => {
       const data = doc.data();
+      const releaseDate = data.releaseDate instanceof Timestamp
+        ? data.releaseDate.toDate().toISOString().split('T')[0]
+        : data.releaseDate;
+        
       return {
         id: doc.id,
         title: data.title,
@@ -28,8 +35,8 @@ export async function getNovels(): Promise<Novel[]> {
         quote: data.quote,
         coverImage: data.coverImage,
         pdfUrl: data.pdfUrl,
-        releaseDate: data.releaseDate,
-        isFeatured: data.isFeatured,
+        releaseDate: releaseDate,
+        isFeatured: data.isFeatured || false,
       };
     }) as Novel[];
     return novelsList;
