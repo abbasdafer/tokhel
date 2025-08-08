@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, Feather } from 'lucide-react';
+import { Menu, Feather, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -9,15 +9,20 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { handleSignOut } from '@/app/auth/actions';
 
 const navLinks = [
   { href: '/novels', label: 'الروايات السابقة' },
   { href: '/about', label: 'عن الكاتب' },
   { href: '/contact', label: 'تواصل معنا' },
+  { href: '/admin', label: 'لوحة التحكم' },
 ];
 
 export function Header() {
   const [isSheetOpen, setSheetOpen] = useState(false);
+  const pathname = usePathname();
+  const isAdminPage = pathname.startsWith('/admin');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -39,6 +44,14 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+           {isAdminPage && (
+            <form action={handleSignOut}>
+              <Button variant="ghost" size="sm" type="submit">
+                <LogOut className="me-2 h-4 w-4" />
+                تسجيل الخروج
+              </Button>
+            </form>
+          )}
         </nav>
 
         <div className="flex md:hidden items-center">
@@ -65,6 +78,14 @@ export function Header() {
                     {link.label}
                   </Link>
                 ))}
+                 {isAdminPage && (
+                  <form action={handleSignOut} className="mt-4">
+                     <Button variant="ghost" type="submit" className="w-full justify-start text-lg font-medium">
+                      <LogOut className="me-2 h-5 w-5" />
+                      تسجيل الخروج
+                    </Button>
+                  </form>
+                )}
               </div>
             </SheetContent>
           </Sheet>
