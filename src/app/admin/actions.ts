@@ -29,9 +29,8 @@ export type FormState = {
 
 export async function getNovels(): Promise<Novel[]> {
   try {
-    // Simplified query to isolate the permissions/indexing issue.
-    // The complex ordering will be handled in the client code temporarily.
-    const snapshot = await getDocs(novelsCollection);
+    const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
+    const snapshot = await getDocs(q);
     const novels: Novel[] = snapshot.docs.map(doc => {
         const data = doc.data();
         const releaseDate = (data.releaseDate as Timestamp).toDate();
@@ -46,16 +45,11 @@ export async function getNovels(): Promise<Novel[]> {
             isFeatured: data.isFeatured === true, // Ensure boolean
         };
     });
-    // Manually sort the novels here as a temporary workaround
-    return novels.sort((a, b) => {
-        if (a.isFeatured && !b.isFeatured) return -1;
-        if (!a.isFeatured && b.isFeatured) return 1;
-        // Dates are strings, for a more robust sort, they should be compared as dates
-        // but for now, this is fine as a temporary diagnostic step.
-        return 0;
-    });
+    return novels;
   } catch (error) {
     console.error("Error fetching novels from Firestore:", error);
+    // In case of error (e.g., permissions issue), return an empty array
+    // to prevent the app from crashing.
     return [];
   }
 }
