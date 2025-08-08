@@ -55,6 +55,7 @@ export async function getNovels(): Promise<Novel[]> {
     return novelsList;
   } catch (error) {
     console.error("Error fetching novels: ", error);
+    // Return empty array on error to prevent site crash
     return [];
   }
 }
@@ -75,6 +76,8 @@ export async function addNovel(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+   return { message: 'تم تعطيل إضافة الروايات مؤقتًا.' };
+  /*
   const validatedFields = NovelSchema.safeParse({
     title: formData.get('title'),
     quote: formData.get('quote'),
@@ -130,6 +133,7 @@ export async function addNovel(
     }
     return { message: 'فشل في إضافة الرواية.' };
   }
+  */
 }
 
 export async function editNovel(
@@ -137,6 +141,8 @@ export async function editNovel(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  return { message: 'تم تعطيل تعديل الروايات مؤقتًا.' };
+  /*
   const validatedFields = EditNovelSchema.safeParse({
     title: formData.get('title'),
     quote: formData.get('quote'),
@@ -167,9 +173,12 @@ export async function editNovel(
     console.error(e);
     return { message: 'فشل في تحديث الرواية.' };
   }
+  */
 }
 
 export async function deleteNovel(id: string) {
+   return { message: 'تم تعطيل حذف الروايات مؤقتًا.' };
+  /*
   try {
     // Note: This doesn't delete the files from storage to keep it simple.
     // In a real-world app, you'd want to delete the associated files from Firebase Storage.
@@ -182,9 +191,12 @@ export async function deleteNovel(id: string) {
     console.error(e);
     return { message: 'فشل في حذف الرواية.' };
   }
+  */
 }
 
 export async function setFeaturedNovel(id: string) {
+  return { message: 'تم تعطيل تحديد الروايات القادمة مؤقتًا.' };
+  /*
   const batch = writeBatch(db);
   const novelsRef = collection(db, 'novels');
   
@@ -212,4 +224,5 @@ export async function setFeaturedNovel(id: string) {
     console.error(e);
     return { message: 'فشل في تحديد الرواية كقادمة.' };
   }
+  */
 }
