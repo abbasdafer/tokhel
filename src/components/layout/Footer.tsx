@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Feather, Twitter, Instagram, Facebook } from 'lucide-react';
+import { Feather, Mail, Send, Instagram } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -11,15 +11,15 @@ export function Footer() {
             بُني بحب وشغف. &copy; {new Date().getFullYear()} حبر توخيل.
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="#" aria-label="Twitter">
-            <Twitter className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
+        <div className="flex items-center gap-6">
+           <Link href="mailto:alzmylyywsf3@gmail.com" aria-label="Email">
+            <Mail className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
           </Link>
-          <Link href="#" aria-label="Instagram">
+          <Link href="https://t.me/Cq_2q" target="_blank" aria-label="Telegram">
+            <Send className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
+          </Link>
+          <Link href="https://instagram.com/3t_cq" target="_blank" aria-label="Instagram">
             <Instagram className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
-          </Link>
-          <Link href="#" aria-label="Facebook">
-            <Facebook className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
           </Link>
         </div>
       </div>
