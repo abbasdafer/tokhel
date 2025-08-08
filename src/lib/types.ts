@@ -8,3 +8,8 @@ export type Novel = {
   releaseDate: string;
   isFeatured: boolean;
 };
+
+export type FileUploadResult = {
+  url: string;
+  path: string;
+};

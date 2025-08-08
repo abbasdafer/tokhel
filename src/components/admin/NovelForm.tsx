@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { addNovel, type FormState } from '@/app/admin/actions';
 import { Button } from '@/components/ui/button';
@@ -25,28 +25,37 @@ export function NovelForm() {
   const initialState: FormState = { message: '' };
   const [state, formAction] = useFormState(addNovel, initialState);
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.message && !state.errors) {
-      toast({
-        title: 'نجاح',
-        description: state.message,
-      });
+    if (state.message) {
+      if(state.errors) {
+        // Don't show a toast for validation errors, they are displayed inline
+      } else {
+        toast({
+          title: 'نجاح',
+          description: state.message,
+        });
+        // Reset form on successful submission
+        formRef.current?.reset();
+      }
     }
   }, [state, toast]);
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form ref={formRef} action={formAction} className="space-y-6">
         
-      {state.errors && (
+      {state.message && state.errors && (
          <Alert variant="destructive">
           <Terminal className="h-4 w-4" />
-          <AlertTitle>حدث خطأ!</AlertTitle>
+          <AlertTitle>حدث خطأ في التحقق!</AlertTitle>
           <AlertDescription>
-            <ul className="list-disc list-inside">
+            <ul className="list-disc list-inside space-y-1 mt-2">
                 {state.errors.title && <li>{state.errors.title[0]}</li>}
                 {state.errors.quote && <li>{state.errors.quote[0]}</li>}
                 {state.errors.novelContent && <li>{state.errors.novelContent[0]}</li>}
+                {state.errors.coverImage && <li>{state.errors.coverImage[0]}</li>}
+                {state.errors.pdfFile && <li>{state.errors.pdfFile[0]}</li>}
             </ul>
           </AlertDescription>
         </Alert>
@@ -79,23 +88,20 @@ export function NovelForm() {
           name="novelContent"
           placeholder="الصق محتوى الرواية هنا ليقوم الذكاء الاصطناعي بتلخيصه..."
           rows={10}
-          required
         />
         <p className="text-sm text-muted-foreground">
-          سيتم استخدام هذا المحتوى لتوليد وصف مختصر من 3 أسطر تلقائيًا.
+          اختياري: سيتم استخدام هذا المحتوى لتوليد وصف مختصر تلقائيًا.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
             <Label htmlFor="pdfFile">ملف PDF</Label>
-            <Input id="pdfFile" name="pdfFile" type="file" disabled />
-            <p className="text-sm text-muted-foreground">ميزة الرفع معطلة في هذا العرض.</p>
+            <Input id="pdfFile" name="pdfFile" type="file" accept=".pdf" required />
         </div>
         <div className="space-y-2">
             <Label htmlFor="coverImage">صورة الغلاف</Label>
-            <Input id="coverImage" name="coverImage" type="file" disabled />
-            <p className="text-sm text-muted-foreground">ميزة الرفع معطلة في هذا العرض.</p>
+            <Input id="coverImage" name="coverImage" type="file" accept="image/*" required />
         </div>
       </div>
       
