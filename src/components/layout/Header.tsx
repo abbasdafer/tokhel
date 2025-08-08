@@ -25,7 +25,7 @@ export function Header() {
         <div className="me-auto flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Feather className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">حبر تخيّل</span>
+            <span className="font-bold text-lg">حبر توخيل</span>
           </Link>
         </div>
 
@@ -53,7 +53,7 @@ export function Header() {
               <div className="flex flex-col gap-4 py-8">
                 <Link href="/" className="flex items-center gap-2 mb-4" onClick={() => setSheetOpen(false)}>
                   <Feather className="h-6 w-6 text-primary" />
-                  <span className="font-bold text-lg">حبر تخيّل</span>
+                  <span className="font-bold text-lg">حبر توخيل</span>
                 </Link>
                 {navLinks.map((link) => (
                   <Link

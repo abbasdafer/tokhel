@@ -10,7 +10,7 @@ export default function AboutPage() {
             عن الكاتب
           </h1>
           <p className="text-muted-foreground mt-3 text-xl">
-            رحلتي مع الكلمات والخيال.
+            رحلتي مع الكلمات.
           </p>
         </div>
 
@@ -28,10 +28,10 @@ export default function AboutPage() {
           </div>
           <div className="md:col-span-2 animate-fade-in [animation-delay:400ms]">
             <h2 className="text-3xl font-bold font-headline mb-4">
-              حبر تخيّل
+              حبر توخيل
             </h2>
             <p className="text-lg text-foreground/80 leading-relaxed mb-4">
-              أهلاً بكم في عالمي. أنا روائي أجد في الكتابة وسيلة للتنفس والتعبير عن الأفكار التي تجول في خاطري. بدأت رحلتي مع القلم منذ الصغر، حيث كانت القصص القصيرة هي نافذتي الأولى على عوالم الخيال. اليوم, أكرس وقتي لنسج روايات كاملة تأخذ القارئ في رحلات لا تُنسى.
+              أهلاً بكم في عالمي. أنا توخيل، واسمي الحقيقي يوسف. كروائي، أجد في الكتابة وسيلة للتنفس والتعبير عن الأفكار التي تجول في خاطري. أؤمن أن الكتابة تكشف عن أجزاء خفية من دواخل الإنسان.
             </p>
             <p className="text-lg text-foreground/80 leading-relaxed">
               أؤمن أن كل قصة هي مغامرة تستحق أن تُروى، وأن الكلمات لديها القدرة على تغيير وجهات النظر وإلهام الأرواح. شكراً لكونكم جزءاً من هذه الرحلة.
@@ -43,12 +43,12 @@ export default function AboutPage() {
             <div className="p-6 bg-card rounded-lg shadow-sm animate-fade-in [animation-delay:600ms]">
                 <Award className="mx-auto h-10 w-10 text-accent mb-4"/>
                 <h3 className="text-xl font-bold">الجوائز</h3>
-                <p className="text-muted-foreground mt-2">جائزة أفضل رواية خيال علمي 2023.</p>
+                <p className="text-muted-foreground mt-2">قيد التجهيز</p>
             </div>
             <div className="p-6 bg-card rounded-lg shadow-sm animate-fade-in [animation-delay:700ms]">
                 <BookOpen className="mx-auto h-10 w-10 text-accent mb-4"/>
                 <h3 className="text-xl font-bold">الإصدارات</h3>
-                <p className="text-muted-foreground mt-2">أكثر من 5 روايات منشورة.</p>
+                <p className="text-muted-foreground mt-2">روايتان منشورتان</p>
             </div>
             <div className="p-6 bg-card rounded-lg shadow-sm animate-fade-in [animation-delay:800ms]">
                 <Coffee className="mx-auto h-10 w-10 text-accent mb-4"/>

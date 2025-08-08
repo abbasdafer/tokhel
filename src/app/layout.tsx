@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Tokhel Ink | حبر تخيّل',
+  title: 'Tokhel Ink | حبر توخيل',
   description: 'الموقع الرسمي للروائي',
 };
 
