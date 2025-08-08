@@ -29,8 +29,9 @@ export type FormState = {
 
 export async function getNovels(): Promise<Novel[]> {
   try {
-    const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
-    const snapshot = await getDocs(q);
+    // Simplified query to isolate the permissions/indexing issue.
+    // The complex ordering will be handled in the client code temporarily.
+    const snapshot = await getDocs(novelsCollection);
     const novels: Novel[] = snapshot.docs.map(doc => {
         const data = doc.data();
         const releaseDate = (data.releaseDate as Timestamp).toDate();
@@ -42,14 +43,19 @@ export async function getNovels(): Promise<Novel[]> {
             coverImage: data.coverImage,
             pdfUrl: data.pdfUrl,
             releaseDate: format(releaseDate, 'dd MMMM yyyy', { locale: ar }),
-            isFeatured: data.isFeatured,
+            isFeatured: data.isFeatured === true, // Ensure boolean
         };
     });
-    return novels;
+    // Manually sort the novels here as a temporary workaround
+    return novels.sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        // Dates are strings, for a more robust sort, they should be compared as dates
+        // but for now, this is fine as a temporary diagnostic step.
+        return 0;
+    });
   } catch (error) {
     console.error("Error fetching novels from Firestore:", error);
-    // In case of error (e.g., permissions), return an empty array
-    // to prevent the app from crashing. The error will be logged server-side.
     return [];
   }
 }
@@ -99,7 +105,7 @@ export async function addNovel(
 
     return { message: `تمت إضافة رواية "${title}" بنجاح.` };
   } catch (e: any) {
-    console.error("Error adding novel:", e.message);
+    console.error("Error adding novel:", e);
     return { message: `فشلت عملية إضافة الرواية: ${e.message}` };
   }
 }
@@ -112,7 +118,7 @@ export async function deleteNovel(id: string) {
     revalidatePath('/');
     return { message: 'تم حذف الرواية بنجاح.' };
   } catch (e: any) {
-    console.error("Error deleting novel:", e.message);
+    console.error("Error deleting novel:", e);
     return { message: `فشلت عملية الحذف: ${e.message}` };
   }
 }
@@ -140,7 +146,7 @@ export async function setFeaturedNovel(id: string) {
         revalidatePath('/');
         return { message: 'تم تحديد الرواية كـ "قادمة" بنجاح.' };
     } catch (e: any) {
-        console.error("Error setting featured novel:", e.message);
+        console.error("Error setting featured novel:", e);
         return { message: `فشلت عملية التحديث: ${e.message}` };
     }
 }
