@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -30,7 +31,7 @@ export type FormState = {
   message: string;
   errors?: {
     title?: string[];
-    quote?: string[];
+    quote?:string[];
     novelContent?: string[];
     description?: string[];
   };
@@ -40,9 +41,13 @@ export async function getNovels(): Promise<Novel[]> {
   try {
     const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
     const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      console.log('No novels found in Firestore.');
+      return [];
+    }
     const novels: Novel[] = snapshot.docs.map(doc => {
         const data = doc.data();
-        const releaseDate = (data.releaseDate as Timestamp).toDate();
+        const releaseDate = (data.releaseDate as Timestamp)?.toDate();
         return {
             id: doc.id,
             title: data.title,
@@ -50,8 +55,8 @@ export async function getNovels(): Promise<Novel[]> {
             quote: data.quote,
             coverImage: data.coverImage,
             pdfUrl: data.pdfUrl,
-            releaseDate: format(releaseDate, 'dd MMMM yyyy', { locale: ar }),
-            isFeatured: data.isFeatured === true, // Ensure boolean
+            releaseDate: releaseDate ? format(releaseDate, 'dd MMMM yyyy', { locale: ar }) : "غير محدد",
+            isFeatured: data.isFeatured === true,
         };
     });
     return novels;
@@ -67,7 +72,11 @@ export async function addNovel(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  // Temporarily disabled due to security rules.
+  console.log('addNovel function is temporarily disabled.');
+  return { message: 'ميزة الإضافة معطلة مؤقتًا.' };
   
+  /*
   const validatedFields = NovelSchema.safeParse({
     title: formData.get('title'),
     quote: formData.get('quote'),
@@ -118,6 +127,7 @@ export async function addNovel(
     console.error("Error adding novel:", e);
     return { message: `فشلت عملية إضافة الرواية: ${e.message}` };
   }
+  */
 }
 
 export async function editNovel(
@@ -125,6 +135,11 @@ export async function editNovel(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+   // Temporarily disabled due to security rules.
+  console.log('editNovel function is temporarily disabled.');
+  return { message: 'ميزة التعديل معطلة مؤقتًا.' };
+  
+  /*
   const validatedFields = EditNovelSchema.safeParse({
     title: formData.get('title'),
     quote: formData.get('quote'),
@@ -157,10 +172,15 @@ export async function editNovel(
     console.error("Error updating novel:", e);
     return { message: `فشلت عملية تحديث الرواية: ${e.message}` };
   }
+  */
 }
 
 
 export async function deleteNovel(id: string) {
+  // Temporarily disabled due to security rules.
+  console.log('deleteNovel function is temporarily disabled.');
+  return { message: 'ميزة الحذف معطلة مؤقتًا.' };
+  /*
   try {
     await deleteDoc(doc(db, 'novels', id));
     revalidatePath('/admin');
@@ -171,10 +191,15 @@ export async function deleteNovel(id: string) {
     console.error("Error deleting novel:", e);
     return { message: `فشلت عملية الحذف: ${e.message}` };
   }
+  */
 }
 
 
 export async function setFeaturedNovel(id: string) {
+    // Temporarily disabled due to security rules.
+    console.log('setFeaturedNovel function is temporarily disabled.');
+    return { message: 'ميزة التحديد كقادمة معطلة مؤقتًا.' };
+    /*
     try {
         const batch = writeBatch(db);
 
@@ -199,4 +224,8 @@ export async function setFeaturedNovel(id: string) {
         console.error("Error setting featured novel:", e);
         return { message: `فشلت عملية التحديث: ${e.message}` };
     }
+    */
 }
+
+
+    
