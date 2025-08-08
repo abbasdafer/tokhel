@@ -6,6 +6,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
 import { db } from '@/lib/firebase';
 import type { Novel } from '@/lib/types';
 import { z } from 'zod';
+import { summarizeNovel } from '@/ai/flows/summarize-novel';
 
 const NovelSchema = z.object({
   title: z.string().min(1, 'العنوان مطلوب.'),
@@ -17,17 +18,15 @@ const NovelSchema = z.object({
 export async function getNovels(): Promise<Novel[]> {
   try {
     const novelsCollection = collection(db, 'novels');
-    // Simplified query to avoid missing index error.
-    // The user needs to create the composite index in Firestore for the complex query to work.
-    // orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc')
-    const q = query(novelsCollection, orderBy('releaseDate', 'desc'));
+    const q = query(novelsCollection, orderBy('isFeatured', 'desc'), orderBy('releaseDate', 'desc'));
     const novelSnapshot = await getDocs(q);
     const novelsList = novelSnapshot.docs.map(doc => {
       const data = doc.data();
-      const releaseDate = data.releaseDate instanceof Timestamp
+      // Safely handle Firestore Timestamp
+      const releaseDate = data.releaseDate instanceof Timestamp 
         ? data.releaseDate.toDate().toISOString().split('T')[0]
         : data.releaseDate;
-        
+
       return {
         id: doc.id,
         title: data.title,
@@ -42,7 +41,7 @@ export async function getNovels(): Promise<Novel[]> {
     return novelsList;
   } catch (error) {
     console.error("Error fetching novels: ", error);
-    // In case of error (e.g., permissions), return an empty array
+    // In case of error (e.g., permissions or missing index), return an empty array
     // to prevent the app from crashing.
     return [];
   }
@@ -75,16 +74,22 @@ export async function addNovel(
     };
   }
   
-  const { title, quote } = validatedFields.data;
+  const { title, quote, novelContent } = validatedFields.data;
 
   try {
+    let description = "سيتم إنشاء الوصف قريبًا...";
+    if (novelContent) {
+      const result = await summarizeNovel({ novelContent });
+      description = result.summary;
+    }
+
     await addDoc(collection(db, 'novels'), {
       title,
       quote,
-      description: "سيتم إنشاء الوصف قريبًا...", // Placeholder description
+      description,
       coverImage: 'https://placehold.co/400x600/a7b7c7/f0f0f0',
       pdfUrl: '#',
-      releaseDate: new Date().toISOString().split('T')[0],
+      releaseDate: new Date(),
       isFeatured: false,
     });
 
