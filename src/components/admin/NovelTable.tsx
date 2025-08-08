@@ -23,10 +23,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Star, Trash2 } from 'lucide-react';
+import { Pencil, Star, Trash2 } from 'lucide-react';
 import { useTransition } from 'react';
 import { deleteNovel, setFeaturedNovel } from '@/app/admin/actions';
 import { useToast } from '@/hooks/use-toast';
+import { EditNovelForm } from './EditNovelForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { useState } from 'react';
+
 
 interface NovelTableProps {
   novels: Novel[];
@@ -34,6 +38,7 @@ interface NovelTableProps {
 
 export function NovelTable({ novels }: NovelTableProps) {
   const [isPending, startTransition] = useTransition();
+  const [isDialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = (id: string) => {
@@ -56,6 +61,8 @@ export function NovelTable({ novels }: NovelTableProps) {
       });
     });
   };
+  
+  const closeDialog = () => setDialogOpen(false);
 
   return (
     <div className="rounded-lg border">
@@ -91,6 +98,20 @@ export function NovelTable({ novels }: NovelTableProps) {
               </TableCell>
               <TableCell className="text-left">
                 <div className="flex gap-2">
+                  <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                       <Button variant="outline" size="sm">
+                        <Pencil className="me-2 h-4 w-4" />
+                        تعديل
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>تعديل رواية: {novel.title}</DialogTitle>
+                      </DialogHeader>
+                      <EditNovelForm novel={novel} onSuccess={closeDialog}/>
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     variant="outline"
                     size="sm"

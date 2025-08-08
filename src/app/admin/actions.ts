@@ -7,7 +7,7 @@ import { summarizeNovel } from '@/ai/flows/summarize-novel';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, writeBatch, query, where, Timestamp, orderBy, updateDoc } from 'firebase/firestore';
 
 const novelsCollection = collection(db, 'novels');
 
@@ -15,8 +15,16 @@ const novelsCollection = collection(db, 'novels');
 const NovelSchema = z.object({
   title: z.string().min(1, 'العنوان مطلوب'),
   quote: z.string().min(1, 'الاقتباس مطلوب'),
-  novelContent: z.string().min(1, 'محتوى الرواية مطلوب للتلخيص'),
+  novelContent: z.string().optional(), // Becomes optional
 });
+
+// Schema for editing, where novelContent is not required for summarization
+const EditNovelSchema = z.object({
+  title: z.string().min(1, 'العنوان مطلوب'),
+  quote: z.string().min(1, 'الاقتباس مطلوب'),
+  description: z.string().min(1, 'الوصف مطلوب'),
+});
+
 
 export type FormState = {
   message: string;
@@ -24,6 +32,7 @@ export type FormState = {
     title?: string[];
     quote?: string[];
     novelContent?: string[];
+    description?: string[];
   };
 };
 
@@ -74,6 +83,13 @@ export async function addNovel(
 
   const { title, quote, novelContent } = validatedFields.data;
 
+  if (!novelContent) {
+     return {
+      message: 'فشلت عملية التحقق من الحقول.',
+      errors: { novelContent: ['محتوى الرواية مطلوب للتلخيص.'] },
+    };
+  }
+
   try {
     // AI Summarization
     const novels = await getNovels();
@@ -103,6 +119,46 @@ export async function addNovel(
     return { message: `فشلت عملية إضافة الرواية: ${e.message}` };
   }
 }
+
+export async function editNovel(
+  id: string,
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const validatedFields = EditNovelSchema.safeParse({
+    title: formData.get('title'),
+    quote: formData.get('quote'),
+    description: formData.get('description'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      message: 'فشلت عملية التحقق من الحقول.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { title, quote, description } = validatedFields.data;
+
+  try {
+    const novelRef = doc(db, 'novels', id);
+    await updateDoc(novelRef, {
+      title,
+      quote,
+      description,
+    });
+
+    revalidatePath('/admin');
+    revalidatePath('/novels');
+    revalidatePath('/');
+
+    return { message: 'تم تحديث الرواية بنجاح.' };
+  } catch (e: any) {
+    console.error("Error updating novel:", e);
+    return { message: `فشلت عملية تحديث الرواية: ${e.message}` };
+  }
+}
+
 
 export async function deleteNovel(id: string) {
   try {
