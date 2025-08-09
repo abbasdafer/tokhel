@@ -5,13 +5,13 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  "projectId": "tokhel-ink",
-  "appId": "1:432216431757:web:7d70c0a9520c80b49216c4",
-  "storageBucket": "tokhel-ink.appspot.com",
-  "apiKey": "AIzaSyD425s72L16DUUZjMmHb0Y3MhWkfNzk9XM",
-  "authDomain": "tokhel-ink.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "432216431757"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
