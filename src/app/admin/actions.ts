@@ -8,7 +8,6 @@ import { db, storage } from '@/lib/firebase';
 import type { Novel, FileUploadResult } from '@/lib/types';
 import { z } from 'zod';
 import { summarizeNovel } from '@/ai/flows/summarize-novel';
-import { v4 as uuidv4 } from 'uuid';
 import { placeholderNovels } from '@/lib/placeholder-data';
 
 const NovelSchema = z.object({
@@ -112,7 +111,7 @@ export async function addNovel(
         description = "وصف مؤقت. سيتم تحديثه قريبًا.";
     }
 
-    const fileId = uuidv4();
+    const fileId = crypto.randomUUID();
     const coverImagePath = `covers/${fileId}-${coverImage.name}`;
     const pdfPath = `pdfs/${fileId}-${pdfFile.name}`;
 
