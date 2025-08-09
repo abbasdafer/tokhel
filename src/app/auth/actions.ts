@@ -23,6 +23,7 @@ export async function handleSignIn(prevState: string | undefined, formData: Form
     });
     
   } catch (error: any) {
+    console.error('Firebase SignIn Error:', error); // Log the full error
     if (error.code === 'auth/invalid-credential') {
         return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
     }
