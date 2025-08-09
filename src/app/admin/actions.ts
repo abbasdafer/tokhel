@@ -20,7 +20,9 @@ const NovelSchema = z.object({
   coverImage: z.instanceof(File).refine(file => file.size > 0, 'صورة الغلاف مطلوبة.'),
 });
 
-const EditNovelSchema = NovelSchema.omit({ pdfFile: true, coverImage: true, novelContent: true });
+const EditNovelSchema = NovelSchema.omit({ pdfFile: true, coverImage: true, novelContent: true }).extend({
+    description: z.string().min(1, 'الوصف مطلوب.'),
+});
 
 
 async function uploadFile(file: File, path: string): Promise<FileUploadResult> {
@@ -52,6 +54,11 @@ export async function getNovels(): Promise<Novel[]> {
         isFeatured: data.isFeatured || false,
       };
     }) as Novel[];
+    
+    if (novelsList.length === 0) {
+        return placeholderNovels;
+    }
+
     return novelsList;
   } catch (error) {
     console.error("Firebase fetch failed, returning placeholder data:", error);
@@ -81,7 +88,58 @@ export async function addNovel(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-   return { message: 'تم تعطيل إضافة الروايات مؤقتًا.' };
+  const validatedFields = NovelSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
+
+  if (!validatedFields.success) {
+    return {
+      message: 'فشل التحقق من صحة الحقول.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { title, quote, novelContent, pdfFile, coverImage } = validatedFields.data;
+  let { description } = validatedFields.data;
+
+  try {
+    if (novelContent && !description) {
+      const summaryResult = await summarizeNovel({ novelContent });
+      description = summaryResult.summary;
+    }
+    
+    if (!description) {
+        description = "وصف مؤقت. سيتم تحديثه قريبًا.";
+    }
+
+    const fileId = uuidv4();
+    const coverImagePath = `covers/${fileId}-${coverImage.name}`;
+    const pdfPath = `pdfs/${fileId}-${pdfFile.name}`;
+
+    const [coverImageResult, pdfFileResult] = await Promise.all([
+      uploadFile(coverImage, coverImagePath),
+      uploadFile(pdfFile, pdfPath),
+    ]);
+    
+    await addDoc(collection(db, 'novels'), {
+      title,
+      quote,
+      description,
+      coverImage: coverImageResult.url,
+      pdfUrl: pdfFileResult.url,
+      releaseDate: new Date(),
+      isFeatured: false,
+    });
+
+    revalidatePath('/admin');
+    revalidatePath('/');
+    revalidatePath('/novels');
+
+    return { message: 'تمت إضافة الرواية بنجاح!' };
+  } catch (error) {
+    console.error('Error adding novel:', error);
+    return { message: 'فشل في إضافة الرواية. حدث خطأ غير متوقع.' };
+  }
 }
 
 export async function editNovel(
@@ -89,13 +147,75 @@ export async function editNovel(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  return { message: 'تم تعطيل تعديل الروايات مؤقتًا.' };
+    const validatedFields = EditNovelSchema.safeParse(
+        Object.fromEntries(formData.entries())
+    );
+
+    if (!validatedFields.success) {
+        return {
+        message: 'فشل التحقق من صحة الحقول.',
+        errors: validatedFields.error.flatten().fieldErrors,
+        };
+    }
+
+    const { title, quote, description } = validatedFields.data;
+
+    try {
+        const novelRef = doc(db, 'novels', id);
+        await updateDoc(novelRef, {
+            title,
+            quote,
+            description,
+        });
+
+        revalidatePath('/admin');
+        revalidatePath('/');
+        revalidatePath('/novels');
+
+        return { message: 'تم تعديل الرواية بنجاح!' };
+    } catch (error) {
+        console.error('Error editing novel:', error);
+        return { message: 'فشل في تعديل الرواية. حدث خطأ غير متوقع.' };
+    }
 }
 
 export async function deleteNovel(id: string) {
-   return { message: 'تم تعطيل حذف الروايات مؤقتًا.' };
+    try {
+        await deleteDoc(doc(db, "novels", id));
+        
+        revalidatePath('/admin');
+        revalidatePath('/');
+        revalidatePath('/novels');
+        
+        return { message: 'تم حذف الرواية بنجاح.' };
+    } catch (error) {
+        console.error('Error deleting novel:', error);
+        return { message: 'فشل حذف الرواية.' };
+    }
 }
 
 export async function setFeaturedNovel(id: string) {
-  return { message: 'تم تعطيل تحديد الروايات القادمة مؤقتًا.' };
+   try {
+    const novelsRef = collection(db, 'novels');
+    const q = query(novelsRef);
+    const querySnapshot = await getDocs(q);
+    
+    const batch = writeBatch(db);
+    
+    querySnapshot.forEach((document) => {
+      const isCurrentDoc = document.id === id;
+      batch.update(doc(db, 'novels', document.id), { isFeatured: isCurrentDoc });
+    });
+    
+    await batch.commit();
+
+    revalidatePath('/admin');
+    revalidatePath('/');
+    revalidatePath('/novels');
+    
+    return { message: 'تم تحديد الرواية القادمة بنجاح.' };
+  } catch (error) {
+     console.error('Error setting featured novel:', error);
+     return { message: 'فشل في تحديد الرواية القادمة.' };
+  }
 }
