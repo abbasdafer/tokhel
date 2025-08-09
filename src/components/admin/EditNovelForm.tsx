@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import type { Novel } from '@/lib/types';
 import { editNovel, type FormState } from '@/app/admin/actions';
@@ -29,7 +30,7 @@ interface EditNovelFormProps {
 export function EditNovelForm({ novel, onSuccess }: EditNovelFormProps) {
   const initialState: FormState = { message: '' };
   const editNovelWithId = editNovel.bind(null, novel.id);
-  const [state, formAction] = useFormState(editNovelWithId, initialState);
+  const [state, formAction] = useActionState(editNovelWithId, initialState);
   const { toast } = useToast();
 
   useEffect(() => {

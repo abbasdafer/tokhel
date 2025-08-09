@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useEffect, useRef } from 'react';
 
 import { addNovel, type FormState } from '@/app/admin/actions';
@@ -23,7 +24,7 @@ function SubmitButton() {
 
 export function NovelForm() {
   const initialState: FormState = { message: '' };
-  const [state, formAction] = useFormState(addNovel, initialState);
+  const [state, formAction] = useActionState(addNovel, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
